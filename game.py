@@ -6,8 +6,8 @@ from helper import *
 from sprites import *
 
 # Global Variables
-SCREEN_WIDTH = 1024
-SCREEN_HEIGHT = 700
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 FULLSCREEN = False
 
 '''

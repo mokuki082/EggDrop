@@ -5,8 +5,8 @@ from pygame.locals import *
 from helper import *
 from sprites import *
 
-SCREEN_WIDTH = 1024
-SCREEN_HEIGHT = 700
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 FONT = os.path.join('fonts', 'WorkSans-ExtraBold.ttf')
 
 ''' Place a surface at the center of the screen '''
