@@ -14,22 +14,33 @@ FULLSCREEN = False
 Handles the main initialization of the game
 '''
 class Game:
-
-    def sprite_init(self):
-        # Initialize backdrop
-        self.backdrop = Backdrop()
+    def game_sprite_init(self):
         # Initialize chicken
         self.chicken = Chicken()
-        self.egg_sprites = pygame.sprite.Group()
         # Initialize scorepad
         self.scorepad = Scorepad()
         # Initialize hp
         self.hp = HPBar()
+        # Initialize lost screen
         self.lost_screen = LostScreen()
+        # Pause icon
+        self.pause = Pause()
+        ########################
+        # Level 1 Game objects #
+        ########################
+        # Initialize eggs (gold)
+        self.egg_sprites = pygame.sprite.Group()
+        # Initialize rock eggs
+        self.stone_egg_sprites = pygame.sprite.Group()
+
+    def start_sprite_init(self):
+        # Initialize backdrop
+        self.backdrop = Backdrop()
         # Initialize volumn button
         self.volumn_button = VolumnButton()
         # Initialize start screen
         self.start_screen = StartScreen()
+
 
     def sound_init(self):
         # Initialize sound
@@ -54,7 +65,7 @@ class Game:
         icn = load_image('icon_64.png')[0]
         pygame.display.set_icon(icn)
         #Initialize background and sprites
-        self.sprite_init()
+        self.start_sprite_init()
         self.sound_init()
         self.user_data_f = None
         self.user_data = None
@@ -63,23 +74,42 @@ class Game:
         self.loop()
 
     def loop(self):
-        egg_creation = 0
+        obj_creation = 0 # Controls object creation during the gameplay
         current_screen = 'start_screen'
         played_lost_sound = False
         started = False
+        pause = False
         while 1:
             self.clock.tick(25)
             # Event handler
             for event in pygame.event.get():
-                if (event.type == pygame.QUIT or
-                    (event.type == KEYDOWN and event.key == K_ESCAPE)):
-                    if self.user_data_f:
+                if event.type == pygame.QUIT:
+                    if self.user_data_f: # Close current file no matter what
                         self.user_data_f.close()
                     sys.exit()
+                if event.type == KEYDOWN and event.key == K_ESCAPE: # Quit game
+                    if self.user_data_f: # Close current file no matter what
+                        self.user_data_f.close()
+                    if current_screen == 'game_play':
+                        current_screen = 'start_screen'
+                        started = False
+                    else:
+                        sys.exit()
+                if event.type == MOUSEBUTTONUP: # Control volumes
+                    pos = pygame.mouse.get_pos()
+                    rect = self.volumn_button.rect
+                    img_dim = self.volumn_button.image.get_size()
+                    if (pos[0] in range(rect.left, rect.left + img_dim[0]) and
+                        pos[1] in range(rect.top, rect.top + img_dim[1])):
+                        self.volumn_button.sound_toggle(self.sounds)
+                if (current_screen is not 'start_screen' and event.type == KEYDOWN
+                    and event.key == K_m):
+                    self.volumn_button.sound_toggle(self.sounds)
                 if current_screen == 'highscore_screen':
                     if event.type == KEYDOWN and event.key == K_RETURN:
-                        self.sprite_init()
-                        lost = False
+                        self.game_sprite_init()
+                        played_lost_sound = False
+                        current_screen = 'game_play'
                 if current_screen == 'lost_screen': # If Enter is pressed at lost screen, display highscore
                     if event.type == KEYDOWN and event.key == K_RETURN:
                         # Init and Render highscore
@@ -87,15 +117,8 @@ class Game:
                         for user in self.user_data:
                             for highscore in self.user_data[user]['highscore']:
                                 highscores.append((user, highscore))
-                        self.highscore = Highscore(highscores)
+                        self.highscore = Highscore(highscores, (self.username,self.scorepad.score))
                         current_screen = 'highscore_screen'
-                if event.type == MOUSEBUTTONUP:
-                    pos = pygame.mouse.get_pos()
-                    rect = self.volumn_button.rect
-                    img_dim = self.volumn_button.image.get_size()
-                    if (pos[0] in range(rect.left, rect.left + img_dim[0]) and
-                        pos[1] in range(rect.top, rect.top + img_dim[1])):
-                        self.volumn_button.sound_toggle(self.sounds)
                 if current_screen == 'start_screen':
                     # Enter username
                     if event.type == KEYDOWN:
@@ -110,10 +133,16 @@ class Game:
                                                                         "screen_width": SCREEN_WIDTH,
                                                                         "screen_height": SCREEN_HEIGHT}
                             self.username = self.start_screen.name
+                            self.game_sprite_init()
                             current_screen = 'game_play'
+                if current_screen == 'game_play':
+                    if event.type == KEYDOWN and event.key == K_p: # Pause game
+                        pause = not pause
+            # End of event handler
 
             if current_screen == 'start_screen':
                 # Display start screen
+                self.screen.fill((35, 52, 81))
                 self.volumn_button.render(self.screen)
                 self.start_screen.render(self.screen)
                 pygame.display.update()
@@ -148,41 +177,69 @@ class Game:
                 pygame.display.update()
                 continue
 
-            keys_pressed = pygame.key.get_pressed()
-            self.chicken.move(keys_pressed)
+            if current_screen == 'game_play':
+                if pause:
+                    self.backdrop.render(self.screen)
+                    self.chicken.render(self.screen)
+                    self.egg_sprites.draw(self.screen)
+                    self.stone_egg_sprites.draw(self.screen)
+                    self.scorepad.render(self.screen)
+                    self.hp.render(self.screen)
+                    self.volumn_button.render(self.screen)
+                    darken_screen = DarkenScreen()
+                    darken_screen.render(self.screen)
+                    self.pause.render(self.screen)
+                    pygame.display.update()
+                    continue
 
-            # Drop the eggs on the screen
-            for egg in self.egg_sprites.sprites():
-                egg.drop()
-                if egg.y > SCREEN_HEIGHT + egg.image.get_size()[1]:
-                    self.hp.hp -= 1
-                    self.egg_sprites.remove(egg)
+                keys_pressed = pygame.key.get_pressed()
+                self.chicken.move(keys_pressed)
+
+                # Drop the eggs
+                for egg in self.egg_sprites.sprites() + self.stone_egg_sprites.sprites():
+                    egg.drop()
+                    if egg.y > SCREEN_HEIGHT + egg.image.get_size()[1]:
+                        self.egg_sprites.remove(egg)
+
+                # Check collision - Gold Egg
+                collected_eggs = pygame.sprite.spritecollide(self.chicken, self.egg_sprites, True)
+                if collected_eggs:
+                    self.scorepad.score += len(collected_eggs)
+                    self.sounds['egg_get'].play(0)
+                # Check collision - Stone Egg
+                collected_eggs = pygame.sprite.spritecollide(self.chicken, self.stone_egg_sprites, True)
+                if collected_eggs:
+                    self.hp.hp -= 2
                     self.sounds['egg_break'].play(0)
 
-            # Check collision - and kill the eggs if they collide
-            collected_eggs = pygame.sprite.spritecollide(self.chicken, self.egg_sprites, True)
-            if collected_eggs:
-                self.scorepad.score += len(collected_eggs)
-                self.sounds['egg_get'].play(0)
+                obj_creation += 1
+                # Increment egg counter
+                if obj_creation % 30 == 0:
+                    # Create a new golden egg
+                    egg = GoldEgg()
+                    self.egg_sprites.add(egg)
+                if obj_creation % 10 == 0:
+                    # Create a new stone egg
+                    egg = StoneEgg()
+                    self.stone_egg_sprites.add(egg)
 
-            # Increment egg counter
-            egg_creation += 1
-            if egg_creation == 20:
-                # Create a new egg
-                egg = Egg()
-                self.egg_sprites.add(egg)
-                egg_creation = 0
 
-            # Render sprites
-            self.backdrop.render(self.screen)
-            self.chicken.render(self.screen)
-            self.egg_sprites.draw(self.screen)
-            self.scorepad.render(self.screen)
-            self.hp.render(self.screen)
-            self.volumn_button.render(self.screen)
-            pygame.display.update()
+                # Render sprites
+                self.backdrop.render(self.screen)
+                self.chicken.render(self.screen)
+                self.egg_sprites.draw(self.screen)
+                self.stone_egg_sprites.draw(self.screen)
+                self.scorepad.render(self.screen)
+                self.hp.render(self.screen)
+                self.volumn_button.render(self.screen)
+                pygame.display.update()
 
 
 
 if __name__ == "__main__":
+    # Handle commandline arguments
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'FULLSCREEN':
+            FULLSCREEN = True
+
     Game()

@@ -30,6 +30,13 @@ def load_image(filename, width=None, height=None):
     # Resize image if specified
     if width and height:
         image = pygame.transform.scale(image, (width, height))
+    if width:
+        ratio = width/image.get_size()[0]
+        image = pygame.transform.scale(image, (width, int(image.get_size()[1] * ratio)))
+    elif height:
+        ratio = height/image.get_size()[1]
+        image = pygame.transform.scale(image, (int(image.get_size()[0] * ratio), height))
+
     return image, image.get_rect()
 
 def load_music(filename):

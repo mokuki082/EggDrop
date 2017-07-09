@@ -22,9 +22,17 @@ def position_mid(surface, rect, x, y):
 def position_left(surface, rect, x, y):
     rect.move_ip(x - rect.left, y - rect.top)
 
+class Pause(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image, self.rect = load_image('pause.png')
+        place_center(self.image, self.rect)
+    def render(self, screen):
+        screen.blit(self.image, (self.rect))
 
 class Record(pygame.sprite.Sprite):
-    def __init__(self, rank, username_highscore):
+    def __init__(self, rank, username_highscore, fontcolor=(21, 29, 40)):
+        pygame.sprite.Sprite.__init__(self)
         self.images = load_strip('highscore_recordbar.png', 5)
         # position record
         self.place(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 120 + (rank - 1) * 2 * self.images[0][0].get_size()[1])
@@ -32,9 +40,9 @@ class Record(pygame.sprite.Sprite):
         self.username = username_highscore[0]
         self.score = username_highscore[1]
         self.font = pygame.font.Font(FONT, 20)
-        self.rank_render = self.font.render(str(self.rank), True, (21, 29, 40))
-        self.username_render = self.font.render(self.username, True, (21, 29, 40))
-        self.score_render = self.font.render(str(self.score), True, (21, 29, 40))
+        self.rank_render = self.font.render(str(self.rank), True, fontcolor)
+        self.username_render = self.font.render(self.username, True, fontcolor)
+        self.score_render = self.font.render(str(self.score), True, fontcolor)
         self.duration = 1.5 # Duration per frame
         self.frame_count = 0
 
@@ -57,12 +65,22 @@ class Record(pygame.sprite.Sprite):
 
 
 class Highscore(pygame.sprite.Sprite):
-    def __init__(self, highscores):
+    '''
+    Highscores is a list of (user,score) pairs
+    curr is a (user,score) pair of the current gameplay
+    '''
+    def __init__(self, highscores, curr):
+        pygame.sprite.Sprite.__init__(self)
         self.image, self.rect = load_image('highscore_board.png')
         self.records = []
         highscores.sort(key=lambda x: x[1], reverse=True)
+        user_record = True
         for i in range(min(len(highscores), 5)):
-            record = Record(i + 1, highscores[i])
+            color = (21, 29, 40)
+            if highscores[i] == curr and user_record:
+                color = (185, 71, 46)
+                user_record = False
+            record = Record(i + 1, highscores[i], fontcolor=color)
             self.records.append(record)
         self.highscores = highscores # List of highscore and username pairs
         # Position images
@@ -83,6 +101,7 @@ class Highscore(pygame.sprite.Sprite):
 
 class StartScreen(pygame.sprite.Sprite):
     def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
         self.image, self.rect = load_image('start_screen.png')
         # Position image at the center of the screen
         place_center(self.image, self.rect)
@@ -121,6 +140,7 @@ class StartScreen(pygame.sprite.Sprite):
 
 class VolumnButton(pygame.sprite.Sprite):
     def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
         self.images = []
         self.images.append(load_image('sound_on.png', width=40, height=40))
         self.images.append(load_image('sound_off.png', width=40, height=40))
@@ -148,23 +168,32 @@ class VolumnButton(pygame.sprite.Sprite):
     def render(self, screen):
         screen.blit(self.image, (self.rect))
 
-class LostScreen(pygame.sprite.Sprite):
-    def __init__(self):
-        self.image, self.rect = load_image('lost_screen.png')
+class DarkenScreen(pygame.sprite.Sprite):
+    def __init__(self, color=(35, 52, 81)):
+        pygame.sprite.Sprite.__init__(self)
         self.background_darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.background_darken.set_alpha(200)
-        self.background_darken.fill((35, 52, 81))
+        self.background_darken.fill(color)
+    def render(self, screen):
+        screen.blit(self.background_darken, (0,0))
+
+class LostScreen(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image, self.rect = load_image('lost_screen.png')
+        self.darken = DarkenScreen()
         # Move banner to center
         place_center(self.image, self.rect)
 
     def render(self, screen):
         # Darken the background
-        screen.blit(self.background_darken, (0,0))
+        self.darken.render(screen)
         screen.blit(self.image, (self.rect))
 
 
 class HPBar(pygame.sprite.Sprite):
     def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
         self.hp = 10
         self.font = pygame.font.Font(FONT, 32)
         self.blood_color = (186,71,46)
@@ -181,6 +210,7 @@ class HPBar(pygame.sprite.Sprite):
 
 class Scorepad(pygame.sprite.Sprite):
     def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
         # Initialize font
         self.font = pygame.font.Font(FONT, 32)
         self.score = 0
@@ -191,17 +221,17 @@ class Scorepad(pygame.sprite.Sprite):
         screen.blit(scorepad, (50, 10))
 
 class Egg(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, filename, width=None, height=None, drop_vel=10):
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image('egg_128.png', width=30, height=30)
+        self.image, self.rect = load_image(filename, width=width, height=height)
         self.x = 0
         self.y = 0
-        self.y_dist = random.randint(3,10)
+        self.y_dist = drop_vel
         self.rand_place()
 
     ''' Randomly place the egg at the top of the screen '''
     def rand_place(self):
-        x = random.randint(self.image.get_size()[0] / 2, SCREEN_WIDTH - self.image.get_size()[0])
+        x = random.randint(int(self.image.get_size()[0] / 2), int(SCREEN_WIDTH - self.image.get_size()[0]))
         self.rect.move_ip(x - self.x, 0)
         self.x = x
 
@@ -213,10 +243,19 @@ class Egg(pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect))
 
 
+class StoneEgg(Egg):
+    def __init__(self):
+        super().__init__('stone_egg_40.png', height=35, drop_vel=random.randint(10,15))
+
+class GoldEgg(Egg):
+    def __init__(self):
+        super().__init__('gold_egg_30.png', height=35, drop_vel=random.randint(3,10))
+
+
 class Backdrop(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image('backdrop_3840.png', width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
+        self.image, self.rect = load_image('backdrop_1080.png', width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
         self.vel_x = 0
         self.vel_y = 0
 
