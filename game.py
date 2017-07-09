@@ -25,13 +25,16 @@ class Game:
         self.lost_screen = LostScreen()
         # Pause icon
         self.pause = Pause()
-        ########################
-        # Level 1 Game objects #
-        ########################
+        #########################
+        # Dropping Game Objects #
+        #########################
         # Initialize eggs (gold)
         self.egg_sprites = pygame.sprite.Group()
         # Initialize rock eggs
         self.stone_egg_sprites = pygame.sprite.Group()
+        # Initialize chick babies
+        self.chick_baby_sprites = pygame.sprite.Group()
+
 
     def start_sprite_init(self):
         # Initialize backdrop
@@ -79,6 +82,7 @@ class Game:
         played_lost_sound = False
         started = False
         pause = False
+        droped_chick = False
         while 1:
             self.clock.tick(25)
             # Event handler
@@ -183,6 +187,7 @@ class Game:
                     self.chicken.render(self.screen)
                     self.egg_sprites.draw(self.screen)
                     self.stone_egg_sprites.draw(self.screen)
+                    self.chick_baby_sprites.draw(self.screen)
                     self.scorepad.render(self.screen)
                     self.hp.render(self.screen)
                     self.volumn_button.render(self.screen)
@@ -195,22 +200,39 @@ class Game:
                 keys_pressed = pygame.key.get_pressed()
                 self.chicken.move(keys_pressed)
 
-                # Drop the eggs
-                for egg in self.egg_sprites.sprites() + self.stone_egg_sprites.sprites():
+                # Drop the objects
+                for egg in self.egg_sprites.sprites():
                     egg.drop()
                     if egg.y > SCREEN_HEIGHT + egg.image.get_size()[1]:
                         self.egg_sprites.remove(egg)
+                for egg in self.stone_egg_sprites.sprites():
+                    egg.drop()
+                    if egg.y > SCREEN_HEIGHT + egg.image.get_size()[1]:
+                        self.stone_egg_sprites.remove(egg)
+                for chick in self.chick_baby_sprites.sprites():
+                    chick.drop()
+                    if chick.y > SCREEN_HEIGHT + chick.image.get_size()[1]:
+                        self.chick_baby_sprites.remove(egg)
 
                 # Check collision - Gold Egg
-                collected_eggs = pygame.sprite.spritecollide(self.chicken, self.egg_sprites, True)
-                if collected_eggs:
-                    self.scorepad.score += len(collected_eggs)
+                collected = pygame.sprite.spritecollide(self.chicken, self.egg_sprites, True)
+                if collected:
+                    self.scorepad.score += len(collected)
                     self.sounds['egg_get'].play(0)
                 # Check collision - Stone Egg
-                collected_eggs = pygame.sprite.spritecollide(self.chicken, self.stone_egg_sprites, True)
-                if collected_eggs:
+                collected = pygame.sprite.spritecollide(self.chicken, self.stone_egg_sprites, True)
+                if collected:
                     self.hp.hp -= 2
                     self.sounds['egg_break'].play(0)
+                # Check collision - Chick Baby
+                collected = pygame.sprite.spritecollide(self.chicken, self.chick_baby_sprites, True)
+                if collected:
+                    if self.hp.hp + 3 > 10:
+                        self.hp.hp = 10
+                    else:
+                        self.hp.hp += 3
+                    self.scorepad.score += len(collected) * 10
+                    self.sounds['egg_get'].play(0)
 
                 obj_creation += 1
                 # Increment egg counter
@@ -222,13 +244,20 @@ class Game:
                     # Create a new stone egg
                     egg = StoneEgg()
                     self.stone_egg_sprites.add(egg)
-
+                if self.scorepad.score > 0 and self.scorepad.score % 25 == 0 and not droped_chick:
+                    droped_chick = True
+                    # Create a new chick instance
+                    chick = ChickBaby()
+                    self.chick_baby_sprites.add(chick)
+                elif not self.scorepad.score % 25 == 0:
+                    droped_chick = False
 
                 # Render sprites
                 self.backdrop.render(self.screen)
                 self.chicken.render(self.screen)
                 self.egg_sprites.draw(self.screen)
                 self.stone_egg_sprites.draw(self.screen)
+                self.chick_baby_sprites.draw(self.screen)
                 self.scorepad.render(self.screen)
                 self.hp.render(self.screen)
                 self.volumn_button.render(self.screen)

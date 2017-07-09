@@ -22,6 +22,36 @@ def position_mid(surface, rect, x, y):
 def position_left(surface, rect, x, y):
     rect.move_ip(x - rect.left, y - rect.top)
 
+''' Position an object randomly at the top, returns its new x-coordinate '''
+def position_rand_top(surface, rect):
+    x = random.randint(int(surface.get_size()[0] / 2), int(SCREEN_WIDTH - surface.get_size()[0]))
+    position_mid(surface, rect, x, 0)
+    return x
+
+class ChickBaby(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.nframes = 5
+        self.frames = load_strip('chicken_babies.png', self.nframes, colorkey=(255,255,255))
+        self.frame_counter = 0
+        self.frame_duration = 1
+        # Position the chick baby at a randomized position
+        self.x = position_rand_top(self.frames[0][0], self.frames[0][1])
+        self.y = 0
+        for frame in self.frames[1:]:
+            position_mid(frame[0], frame[1], self.x, 0)
+        self.image = self.frames[0][0]
+        self.rect = self.frames[0][1]
+        self.y_dist = 3
+
+    def drop(self):
+        for frame in self.frames:
+            frame[1].move_ip(0, self.y_dist)
+        self.y += self.y_dist
+        self.image = self.frames[self.frame_counter % self.nframes][0]
+        self.rect = self.frames[self.frame_counter % self.nframes][1]
+        self.frame_counter += 1
+
 class Pause(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -33,10 +63,10 @@ class Pause(pygame.sprite.Sprite):
 class Record(pygame.sprite.Sprite):
     def __init__(self, rank, username_highscore, fontcolor=(21, 29, 40)):
         pygame.sprite.Sprite.__init__(self)
-        self.images = load_strip('highscore_recordbar.png', 5)
+        self.frames = load_strip('highscore_recordbar.png', 5)
         # position record
         self.yoffset = 140
-        self.place(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - self.yoffset + (rank - 1) * 2 * self.images[0][0].get_size()[1])
+        self.place(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - self.yoffset + (rank - 1) * 2 * self.frames[0][0].get_size()[1])
         self.rank = rank
         self.username = username_highscore[0]
         self.score = username_highscore[1]
@@ -48,17 +78,17 @@ class Record(pygame.sprite.Sprite):
         self.frame_count = 0
 
     def place(self, x, y):
-        for image, rect in self.images:
+        for image, rect in self.frames:
             position_mid(image, rect, x, y)
 
     def render(self, screen):
-        frame = self.images[int(self.frame_count/self.duration)]
+        frame = self.frames[int(self.frame_count/self.duration)]
         screen.blit(frame[0], frame[1])
         if self.frame_count <= 4 * self.duration - 1:
             self.frame_count += 1
             return False # Haven't finished animation
         # Finished Animation
-        top = SCREEN_HEIGHT/2 - self.yoffset - 10 + (self.rank - 1) * 2 * self.images[0][0].get_size()[1]
+        top = SCREEN_HEIGHT/2 - self.yoffset - 10 + (self.rank - 1) * 2 * self.frames[0][0].get_size()[1]
         screen.blit(self.rank_render, (SCREEN_WIDTH/2 - 140, top))
         screen.blit(self.username_render, (SCREEN_WIDTH/2 - 80, top))
         screen.blit(self.score_render, (SCREEN_WIDTH/2 + 100, top))
@@ -111,6 +141,7 @@ class StartScreen(pygame.sprite.Sprite):
         self.blinker = pygame.Surface((13, 25))
         self.blinker.fill((21, 29, 40))
         self.blinker_counter = 0
+        self.blinker_duration = 35
 
     def render(self, screen):
         # Render image
@@ -118,12 +149,12 @@ class StartScreen(pygame.sprite.Sprite):
         # Render text
         self.name_render = self.font.render(self.name, True, (21, 29, 40))
         screen.blit(self.name_render, (SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2 + 35))
-        if self.blinker_counter < 50:
+        if self.blinker_counter < self.blinker_duration/2:
             # Position blinker after text
             screen.blit(self.blinker, (self.blinker.get_rect(
                             topleft=(SCREEN_WIDTH/2 - 75 + self.name_render.get_size()[0],
                                     SCREEN_HEIGHT/2 + 37))))
-        if self.blinker_counter < 100:
+        if self.blinker_counter < self.blinker_duration:
             self.blinker_counter += 1
         else:
             self.blinker_counter = 0
@@ -225,16 +256,9 @@ class Egg(pygame.sprite.Sprite):
     def __init__(self, filename, width=None, height=None, drop_vel=10):
         pygame.sprite.Sprite.__init__(self)
         self.image, self.rect = load_image(filename, width=width, height=height)
-        self.x = 0
+        self.x = position_rand_top(self.image, self.rect)
         self.y = 0
         self.y_dist = drop_vel
-        self.rand_place()
-
-    ''' Randomly place the egg at the top of the screen '''
-    def rand_place(self):
-        x = random.randint(int(self.image.get_size()[0] / 2), int(SCREEN_WIDTH - self.image.get_size()[0]))
-        self.rect.move_ip(x - self.x, 0)
-        self.x = x
 
     def drop(self):
         self.rect.move_ip(0, self.y_dist)
