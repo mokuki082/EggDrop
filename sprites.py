@@ -35,7 +35,8 @@ class Record(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.images = load_strip('highscore_recordbar.png', 5)
         # position record
-        self.place(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 120 + (rank - 1) * 2 * self.images[0][0].get_size()[1])
+        self.yoffset = 140
+        self.place(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - self.yoffset + (rank - 1) * 2 * self.images[0][0].get_size()[1])
         self.rank = rank
         self.username = username_highscore[0]
         self.score = username_highscore[1]
@@ -57,7 +58,7 @@ class Record(pygame.sprite.Sprite):
             self.frame_count += 1
             return False # Haven't finished animation
         # Finished Animation
-        top = SCREEN_HEIGHT/2 - 130 + (self.rank - 1) * 2 * self.images[0][0].get_size()[1]
+        top = SCREEN_HEIGHT/2 - self.yoffset - 10 + (self.rank - 1) * 2 * self.images[0][0].get_size()[1]
         screen.blit(self.rank_render, (SCREEN_WIDTH/2 - 140, top))
         screen.blit(self.username_render, (SCREEN_WIDTH/2 - 80, top))
         screen.blit(self.score_render, (SCREEN_WIDTH/2 + 100, top))
@@ -255,7 +256,7 @@ class GoldEgg(Egg):
 class Backdrop(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image('backdrop_1080.png', width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
+        self.image, self.rect = load_image('backdrop_1080.jpg', width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
         self.vel_x = 0
         self.vel_y = 0
 
@@ -265,7 +266,7 @@ class Backdrop(pygame.sprite.Sprite):
 class Chicken(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image('chicken_512.png', width=120, height=120)
+        self.image, self.rect = load_image('chicken_120.png', width=120, height=120)
         # Set the number of pixels to move each time
         self.x_dist = 10
         self.x, self.y = 0, 0
