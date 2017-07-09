@@ -6,8 +6,8 @@ from helper import *
 from sprites import *
 
 # Global Variables
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1366
+SCREEN_HEIGHT = 768
 FULLSCREEN = False
 
 '''
@@ -212,7 +212,7 @@ class Game:
                 for chick in self.chick_baby_sprites.sprites():
                     chick.drop()
                     if chick.y > SCREEN_HEIGHT + chick.image.get_size()[1]:
-                        self.chick_baby_sprites.remove(egg)
+                        self.chick_baby_sprites.remove(chick)
 
                 # Check collision - Gold Egg
                 collected = pygame.sprite.spritecollide(self.chicken, self.egg_sprites, True)

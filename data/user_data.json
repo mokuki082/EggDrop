@@ -1,1 +1,1 @@
-{"Hello": {"volume": true, "highscore": [5, 73, 69, 3], "screen_height": 600, "screen_width": 800}, "Test": {"volume": true, "highscore": [12, 8, 15], "screen_height": 600, "screen_width": 800}}
+{"Test": {"volume": true, "screen_height": 600, "highscore": [12, 8, 15], "screen_width": 800}, "Hello": {"volume": true, "screen_height": 600, "highscore": [5, 73, 69, 3, 18], "screen_width": 800}}
