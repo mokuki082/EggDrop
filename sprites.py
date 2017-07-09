@@ -9,20 +9,83 @@ SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 700
 FONT = os.path.join('fonts', 'WorkSans-ExtraBold.ttf')
 
-''' Position a surface at the center of the screen '''
-def position_center(surface, rect):
+''' Place a surface at the center of the screen '''
+def place_center(surface, rect):
     rect.move_ip(SCREEN_WIDTH/2 - surface.get_size()[0]/2,
                 SCREEN_HEIGHT/2 - surface.get_size()[1]/2)
 
-class HighScore(pygame.sprite.Sprite):
-    def __init__(self):
-        self.back_image, self.back_rect = load_image('highscore_board.png')
+''' Position a surface based on its midpoint '''
+def position_mid(surface, rect, x, y):
+    rect.move_ip(x - rect.left - surface.get_size()[0]/2, y - rect.top - surface.get_size()[1]/2)
+
+''' Position a surface based on its left point'''
+def position_left(surface, rect, x, y):
+    rect.move_ip(x - rect.left, y - rect.top)
+
+
+class Record(pygame.sprite.Sprite):
+    def __init__(self, rank, username_highscore):
+        self.images = load_strip('highscore_recordbar.png', 5)
+        # position record
+        self.place(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - 120 + (rank - 1) * 2 * self.images[0][0].get_size()[1])
+        self.rank = rank
+        self.username = username_highscore[0]
+        self.score = username_highscore[1]
+        self.font = pygame.font.Font(FONT, 20)
+        self.rank_render = self.font.render(str(self.rank), True, (21, 29, 40))
+        self.username_render = self.font.render(self.username, True, (21, 29, 40))
+        self.score_render = self.font.render(str(self.score), True, (21, 29, 40))
+        self.duration = 1.5 # Duration per frame
+        self.frame_count = 0
+
+    def place(self, x, y):
+        for image, rect in self.images:
+            position_mid(image, rect, x, y)
+
+    def render(self, screen):
+        frame = self.images[int(self.frame_count/self.duration)]
+        screen.blit(frame[0], frame[1])
+        if self.frame_count <= 4 * self.duration - 1:
+            self.frame_count += 1
+            return False # Haven't finished animation
+        # Finished Animation
+        top = SCREEN_HEIGHT/2 - 130 + (self.rank - 1) * 2 * self.images[0][0].get_size()[1]
+        screen.blit(self.rank_render, (SCREEN_WIDTH/2 - 140, top))
+        screen.blit(self.username_render, (SCREEN_WIDTH/2 - 80, top))
+        screen.blit(self.score_render, (SCREEN_WIDTH/2 + 100, top))
+        return True # Finished rendering
+
+
+class Highscore(pygame.sprite.Sprite):
+    def __init__(self, highscores):
+        self.image, self.rect = load_image('highscore_board.png')
+        self.records = []
+        highscores.sort(key=lambda x: x[1], reverse=True)
+        for i in range(min(len(highscores), 5)):
+            record = Record(i + 1, highscores[i])
+            self.records.append(record)
+        self.highscores = highscores # List of highscore and username pairs
+        # Position images
+        place_center(self.image, self.rect)
+
+    def compare(tuple_a, tuple_b):
+        if tuple_a[1] == tuple_b[1]:
+            return 0
+        return 1 if tuple_a[1] > tuple_b[1] else -1
+
+    def render(self, screen):
+        screen.blit(self.image, self.rect)
+        for i in self.records:
+            if not i.render(screen):
+                return
+            i.render(screen)
+
 
 class StartScreen(pygame.sprite.Sprite):
     def __init__(self):
         self.image, self.rect = load_image('start_screen.png')
         # Position image at the center of the screen
-        position_center(self.image, self.rect)
+        place_center(self.image, self.rect)
         self.name = ""
         self.font = pygame.font.Font(FONT, 26)
         self.blinker = pygame.Surface((13, 25))
@@ -92,7 +155,7 @@ class LostScreen(pygame.sprite.Sprite):
         self.background_darken.set_alpha(200)
         self.background_darken.fill((35, 52, 81))
         # Move banner to center
-        position_center(self.image, self.rect)
+        place_center(self.image, self.rect)
 
     def render(self, screen):
         # Darken the background
@@ -167,9 +230,11 @@ class Chicken(pygame.sprite.Sprite):
         # Set the number of pixels to move each time
         self.x_dist = 10
         self.x, self.y = 0, 0
+        # Place chicken at the bottom center of the page
+        self.position(SCREEN_WIDTH/2, SCREEN_HEIGHT - 180)
 
     ''' Place sprite at exactly the coordinates specified '''
-    def place(self, x, y):
+    def position(self, x, y):
         self.rect.move_ip(x - self.x, y - self.y)
         self.x, self.y = x, y
 

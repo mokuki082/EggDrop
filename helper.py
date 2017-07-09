@@ -2,6 +2,23 @@ import pygame
 import os, sys
 from pygame.locals import *
 
+def min(a, b):
+    return a if a < b else b
+
+''' Load an animation strip.'''
+def load_strip(filename, nframes, width=None, height=None, colorkey=None):
+    full_image, full_rect = load_image(filename, width=width, height=height)
+    sub_images = []
+    for i in range(nframes):
+        sub_w, sub_h = full_image.get_size()[0]/nframes, full_image.get_size()[1]
+        sub_image = pygame.Surface((sub_w, sub_h))
+        sub_image.blit(full_image, (-i * sub_w, 0, sub_w, sub_h))
+        if colorkey:
+            sub_image.set_colorkey(colorkey)
+        sub_rect = sub_image.get_rect()
+        sub_images.append((sub_image, sub_rect))
+    return sub_images
+
 def load_image(filename, width=None, height=None):
     fullpath = os.path.join('img', filename)
     try:
