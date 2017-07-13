@@ -1,6 +1,8 @@
 import pygame
 import os, sys
 from pygame.locals import *
+import socketserver
+import socket
 
 def min(a, b):
     return a if a < b else b

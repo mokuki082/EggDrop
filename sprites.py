@@ -270,7 +270,7 @@ class Egg(pygame.sprite.Sprite):
 
 class StoneEgg(Egg):
     def __init__(self):
-        super().__init__('stone_egg_40.png', height=35, drop_vel=random.randint(10,15))
+        super().__init__('stone_egg_40.png', height=60, drop_vel=random.randint(10,15))
 
 class GoldEgg(Egg):
     def __init__(self):

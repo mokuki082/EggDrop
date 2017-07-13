@@ -25,9 +25,9 @@ class Game:
         self.lost_screen = LostScreen()
         # Pause icon
         self.pause = Pause()
-        #########################
-        # Dropping Game Objects #
-        #########################
+        #####################
+        # Main Game Objects #
+        #####################
         # Initialize eggs (gold)
         self.egg_sprites = pygame.sprite.Group()
         # Initialize rock eggs
@@ -84,7 +84,6 @@ class Game:
         pause = False
         droped_chick = False
         while 1:
-            self.clock.tick(25)
             # Event handler
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -94,7 +93,7 @@ class Game:
                 if event.type == KEYDOWN and event.key == K_ESCAPE: # Quit game
                     if self.user_data_f: # Close current file no matter what
                         self.user_data_f.close()
-                    if current_screen == 'game_play':
+                    if not current_screen == 'start_screen':
                         current_screen = 'start_screen'
                         started = False
                     else:
@@ -150,6 +149,7 @@ class Game:
                 self.volumn_button.render(self.screen)
                 self.start_screen.render(self.screen)
                 pygame.display.update()
+                time.sleep(0.02)
                 continue
 
             if current_screen == 'highscore_screen':
@@ -157,6 +157,7 @@ class Game:
                 self.volumn_button.render(self.screen)
                 self.highscore.render(self.screen)
                 pygame.display.update()
+                time.sleep(0.02)
                 continue
 
             # User has lost
@@ -179,6 +180,7 @@ class Game:
                 self.volumn_button.render(self.screen)
                 self.lost_screen.render(self.screen)
                 pygame.display.update()
+                time.sleep(0.1)
                 continue
 
             if current_screen == 'game_play':
@@ -195,6 +197,7 @@ class Game:
                     darken_screen.render(self.screen)
                     self.pause.render(self.screen)
                     pygame.display.update()
+                    time.sleep(0.1)
                     continue
 
                 keys_pressed = pygame.key.get_pressed()
@@ -262,6 +265,7 @@ class Game:
                 self.hp.render(self.screen)
                 self.volumn_button.render(self.screen)
                 pygame.display.update()
+                time.sleep(0.01)
 
 
 
