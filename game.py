@@ -4,6 +4,7 @@ import random, time, json
 from pygame.locals import *
 from helper import *
 from sprites import *
+from conn import *
 
 # Global Variables
 SCREEN_WIDTH = 1366
@@ -37,12 +38,7 @@ class Game:
 
 
     def start_sprite_init(self):
-        # Initialize backdrop
-        self.backdrop = Backdrop()
-        # Initialize volumn button
-        self.volumn_button = VolumnButton()
-        # Initialize start screen
-        self.start_screen = StartScreen()
+        self.sprites = SpriteLoader.load_start_screen()
 
 
     def sound_init(self):
@@ -78,7 +74,7 @@ class Game:
 
     def loop(self):
         obj_creation = 0 # Controls object creation during the gameplay
-        current_screen = 'start_screen'
+        game_state = 'start_screen'
         played_lost_sound = False
         started = False
         pause = False
@@ -86,6 +82,9 @@ class Game:
         while 1:
             # Event handler
             for event in pygame.event.get():
+                ###
+                ### Quit game control
+                ###
                 if event.type == pygame.QUIT:
                     if self.user_data_f: # Close current file no matter what
                         self.user_data_f.close()
@@ -93,27 +92,33 @@ class Game:
                 if event.type == KEYDOWN and event.key == K_ESCAPE: # Quit game
                     if self.user_data_f: # Close current file no matter what
                         self.user_data_f.close()
-                    if not current_screen == 'start_screen':
-                        current_screen = 'start_screen'
+                    if not game_state == 'start_screen':
+                        game_state = 'start_screen'
                         started = False
                     else:
                         sys.exit()
-                if event.type == MOUSEBUTTONUP: # Control volumes
+                ###
+                ### Volume control
+                ###
+                if event.type == MOUSEBUTTONUP:
                     pos = pygame.mouse.get_pos()
                     rect = self.volumn_button.rect
                     img_dim = self.volumn_button.image.get_size()
                     if (pos[0] in range(rect.left, rect.left + img_dim[0]) and
                         pos[1] in range(rect.top, rect.top + img_dim[1])):
                         self.volumn_button.sound_toggle(self.sounds)
-                if (current_screen is not 'start_screen' and event.type == KEYDOWN
+                if (game_state is not 'start_screen' and event.type == KEYDOWN
                     and event.key == K_m):
                     self.volumn_button.sound_toggle(self.sounds)
-                if current_screen == 'highscore_screen':
+                ###
+                ### game_state specific events
+                ###
+                if game_state == 'highscore_screen':
                     if event.type == KEYDOWN and event.key == K_RETURN:
                         self.game_sprite_init()
                         played_lost_sound = False
-                        current_screen = 'game_play'
-                if current_screen == 'lost_screen': # If Enter is pressed at lost screen, display highscore
+                        game_state = 'game_play'
+                if game_state == 'lost_screen': # If Enter is pressed at lost screen, display highscore
                     if event.type == KEYDOWN and event.key == K_RETURN:
                         # Init and Render highscore
                         highscores = []
@@ -121,8 +126,8 @@ class Game:
                             for highscore in self.user_data[user]['highscore']:
                                 highscores.append((user, highscore))
                         self.highscore = Highscore(highscores, (self.username,self.scorepad.score))
-                        current_screen = 'highscore_screen'
-                if current_screen == 'start_screen':
+                        game_state = 'highscore_screen'
+                if game_state == 'start_screen':
                     # Enter username
                     if event.type == KEYDOWN:
                         started = self.start_screen.enter_name(event)
@@ -137,13 +142,15 @@ class Game:
                                                                         "screen_height": SCREEN_HEIGHT}
                             self.username = self.start_screen.name
                             self.game_sprite_init()
-                            current_screen = 'game_play'
-                if current_screen == 'game_play':
+                            game_state = 'game_play'
+                if game_state == 'game_play':
                     if event.type == KEYDOWN and event.key == K_p: # Pause game
                         pause = not pause
-            # End of event handler
+            ###
+            ### End of event handler
+            ###
 
-            if current_screen == 'start_screen':
+            if game_state == 'start_screen':
                 # Display start screen
                 self.screen.fill((35, 52, 81))
                 self.volumn_button.render(self.screen)
@@ -152,7 +159,7 @@ class Game:
                 time.sleep(0.02)
                 continue
 
-            if current_screen == 'highscore_screen':
+            if game_state == 'highscore_screen':
                 self.backdrop.render(self.screen)
                 self.volumn_button.render(self.screen)
                 self.highscore.render(self.screen)
@@ -162,9 +169,9 @@ class Game:
 
             # User has lost
             if self.hp.hp <= 0:
-                current_screen = 'lost_screen'
+                game_state = 'lost_screen'
 
-            if current_screen == 'lost_screen':
+            if game_state == 'lost_screen':
                 # Play lost sound once
                 if not played_lost_sound:
                     # Play sound
@@ -183,7 +190,7 @@ class Game:
                 time.sleep(0.1)
                 continue
 
-            if current_screen == 'game_play':
+            if game_state == 'game_play':
                 if pause:
                     self.backdrop.render(self.screen)
                     self.chicken.render(self.screen)

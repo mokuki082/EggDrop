@@ -315,3 +315,17 @@ class Chicken(pygame.sprite.Sprite):
 
     def render(self, screen):
         screen.blit(self.image, (self.rect))
+
+class ConnectionWaitScreen(pygame.sprite.Sprite):
+    def __init__(self):
+        self.image = pygame.Surface(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.rect = self.image.get_rect()
+        self.image.fill((0,0,0))
+
+    def render(self, screen):
+        screen.blit(self.image, (self.rect))
+
+class SpriteLoader():
+    ''' Load the sprites necessary for start_screen '''
+    def load_start_screen():
+        return [Backdrop(), VolumnButton(), StartScreen()]
