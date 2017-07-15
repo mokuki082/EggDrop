@@ -15,32 +15,6 @@ FULLSCREEN = False
 Handles the main initialization of the game
 '''
 class Game:
-    def game_sprite_init(self):
-        # Initialize chicken
-        self.chicken = Chicken()
-        # Initialize scorepad
-        self.scorepad = Scorepad()
-        # Initialize hp
-        self.hp = HPBar()
-        # Initialize lost screen
-        self.lost_screen = LostScreen()
-        # Pause icon
-        self.pause = Pause()
-        #####################
-        # Main Game Objects #
-        #####################
-        # Initialize eggs (gold)
-        self.egg_sprites = pygame.sprite.Group()
-        # Initialize rock eggs
-        self.stone_egg_sprites = pygame.sprite.Group()
-        # Initialize chick babies
-        self.chick_baby_sprites = pygame.sprite.Group()
-
-
-    def start_sprite_init(self):
-        self.sprites = SpriteLoader.load_start_screen()
-
-
     def sound_init(self):
         # Initialize sound
         self.sounds = {'background': load_music('background.wav'),
@@ -53,48 +27,53 @@ class Game:
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT):
         # Initialize pygame
         pygame.init()
-        self.width = width
-        self.height = height
-        if FULLSCREEN:
-            self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
-        else:
-            self.screen = pygame.display.set_mode((self.width, self.height))
-            pygame.display.set_caption('Egg Drop')
         # Set icon
-        icn = load_image('icon_64.png')[0]
-        pygame.display.set_icon(icn)
-        #Initialize background and sprites
-        self.start_sprite_init()
+        pygame.display.set_icon(load_image('icon_64.png')[0])
+        # Set application title
+        pygame.display.set_caption('Egg Drop')
+        # Set screensize/fullscreen
+        if FULLSCREEN:
+            self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
+        else:
+            self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        # Initialize Game Objects
+        self.sprites, self.sprite_ref = load_start_screen()
         self.sound_init()
-        self.user_data_f = None
-        self.user_data = None
-        self.username = None
-        self.clock = pygame.time.Clock()
+        self.user = User()
+        self.handler = Handler(self.sprites, self.sprites)
         self.loop()
 
     def loop(self):
-        obj_creation = 0 # Controls object creation during the gameplay
-        game_state = 'start_screen'
+        '''
+            Available game_states/state_data:
+            'START': started:bool,
+            'SINGLE_SETTING', 'SINGLE_PLAY'
+            'CONN_SETTING', 'CONN', 'MULTI_SETTING', 'MULTI_PLAY'
+
+            Unimplemented game_states:
+            'SETTING'
+        '''
+        game_state = 'START'
+        state_data = {}
         played_lost_sound = False
         started = False
         pause = False
         droped_chick = False
         while 1:
-            # Event handler
+            # Event handling
             for event in pygame.event.get():
                 ###
                 ### Quit game control
                 ###
                 if event.type == pygame.QUIT:
-                    if self.user_data_f: # Close current file no matter what
-                        self.user_data_f.close()
+                    self.user.fclose()
                     sys.exit()
                 if event.type == KEYDOWN and event.key == K_ESCAPE: # Quit game
-                    if self.user_data_f: # Close current file no matter what
-                        self.user_data_f.close()
-                    if not game_state == 'start_screen':
-                        game_state = 'start_screen'
-                        started = False
+                    self.user.fclose()
+                    if not game_state == 'START':
+                        game_state = 'START'
+                        state_data['started'] = False
                     else:
                         sys.exit()
                 ###
@@ -102,22 +81,32 @@ class Game:
                 ###
                 if event.type == MOUSEBUTTONUP:
                     pos = pygame.mouse.get_pos()
-                    rect = self.volumn_button.rect
-                    img_dim = self.volumn_button.image.get_size()
-                    if (pos[0] in range(rect.left, rect.left + img_dim[0]) and
-                        pos[1] in range(rect.top, rect.top + img_dim[1])):
-                        self.volumn_button.sound_toggle(self.sounds)
-                if (game_state is not 'start_screen' and event.type == KEYDOWN
-                    and event.key == K_m):
-                    self.volumn_button.sound_toggle(self.sounds)
+                    rect = self.sprite_ref['VolumeButton'].rect
+                    if rect.collidepoint(pos):
+                        self.sprite_ref['VolumeButton'].sound_toggle(self.sounds)
+                if (not game_state == 'START' and
+                    event.type == KEYDOWN and event.key == K_m):
+                    self.sprite_ref['VolumeButton'].sound_toggle(self.sounds)
                 ###
                 ### game_state specific events
                 ###
-                if game_state == 'highscore_screen':
+                if game_state == 'START':
+                    # Enter username
+                    if event.type == KEYDOWN:
+                        started = self.start_screen.enter_name(event)
+                        if started: # Load user data
+                            self.user.load()
+                            start_screen = self.sprite_ref['StartScreen']
+                            self.user.import_user(start_screen.name)
+                            sprites, ref = SpriteLoader.load_single
+                            self.handler.sprites += SpriteLoader.load_single_game()[0]
+                            game_state = 'game_play'
+                        state_data['started'] = started
+                if game_state == 'HIGHSCORES':
                     if event.type == KEYDOWN and event.key == K_RETURN:
                         self.game_sprite_init()
                         played_lost_sound = False
-                        game_state = 'game_play'
+                        game_state = 'START'
                 if game_state == 'lost_screen': # If Enter is pressed at lost screen, display highscore
                     if event.type == KEYDOWN and event.key == K_RETURN:
                         # Init and Render highscore
@@ -127,22 +116,7 @@ class Game:
                                 highscores.append((user, highscore))
                         self.highscore = Highscore(highscores, (self.username,self.scorepad.score))
                         game_state = 'highscore_screen'
-                if game_state == 'start_screen':
-                    # Enter username
-                    if event.type == KEYDOWN:
-                        started = self.start_screen.enter_name(event)
-                        if started: # Load user data
-                            fname = os.path.join('data', 'user_data.json')
-                            self.user_data_f = open(fname, 'r+')
-                            self.user_data = json.load(self.user_data_f)
-                            if self.start_screen.name not in self.user_data:
-                                self.user_data[self.start_screen.name] = {"volume": True,
-                                                                        "highscore": [],
-                                                                        "screen_width": SCREEN_WIDTH,
-                                                                        "screen_height": SCREEN_HEIGHT}
-                            self.username = self.start_screen.name
-                            self.game_sprite_init()
-                            game_state = 'game_play'
+
                 if game_state == 'game_play':
                     if event.type == KEYDOWN and event.key == K_p: # Pause game
                         pause = not pause
@@ -153,16 +127,16 @@ class Game:
             if game_state == 'start_screen':
                 # Display start screen
                 self.screen.fill((35, 52, 81))
-                self.volumn_button.render(self.screen)
-                self.start_screen.render(self.screen)
+                self.volumn_button.draw(self.screen)
+                self.start_screen.draw(self.screen)
                 pygame.display.update()
                 time.sleep(0.02)
                 continue
 
             if game_state == 'highscore_screen':
-                self.backdrop.render(self.screen)
-                self.volumn_button.render(self.screen)
-                self.highscore.render(self.screen)
+                self.backdrop.draw(self.screen)
+                self.volumn_button.draw(self.screen)
+                self.highscore.draw(self.screen)
                 pygame.display.update()
                 time.sleep(0.02)
                 continue
@@ -183,26 +157,26 @@ class Game:
                     # Change lost
                     played_lost_sound = True
 
-                self.backdrop.render(self.screen)
-                self.volumn_button.render(self.screen)
-                self.lost_screen.render(self.screen)
+                self.backdrop.draw(self.screen)
+                self.volumn_button.draw(self.screen)
+                self.lost_screen.draw(self.screen)
                 pygame.display.update()
                 time.sleep(0.1)
                 continue
 
             if game_state == 'game_play':
                 if pause:
-                    self.backdrop.render(self.screen)
-                    self.chicken.render(self.screen)
+                    self.backdrop.draw(self.screen)
+                    self.chicken.draw(self.screen)
                     self.egg_sprites.draw(self.screen)
                     self.stone_egg_sprites.draw(self.screen)
                     self.chick_baby_sprites.draw(self.screen)
-                    self.scorepad.render(self.screen)
-                    self.hp.render(self.screen)
-                    self.volumn_button.render(self.screen)
+                    self.scorepad.draw(self.screen)
+                    self.hp.draw(self.screen)
+                    self.volumn_button.draw(self.screen)
                     darken_screen = DarkenScreen()
-                    darken_screen.render(self.screen)
-                    self.pause.render(self.screen)
+                    darken_screen.draw(self.screen)
+                    self.pause.draw(self.screen)
                     pygame.display.update()
                     time.sleep(0.1)
                     continue
@@ -263,14 +237,14 @@ class Game:
                     droped_chick = False
 
                 # Render sprites
-                self.backdrop.render(self.screen)
-                self.chicken.render(self.screen)
+                self.backdrop.draw(self.screen)
+                self.chicken.draw(self.screen)
                 self.egg_sprites.draw(self.screen)
                 self.stone_egg_sprites.draw(self.screen)
                 self.chick_baby_sprites.draw(self.screen)
-                self.scorepad.render(self.screen)
-                self.hp.render(self.screen)
-                self.volumn_button.render(self.screen)
+                self.scorepad.draw(self.screen)
+                self.hp.draw(self.screen)
+                self.volumn_button.draw(self.screen)
                 pygame.display.update()
                 time.sleep(0.01)
 

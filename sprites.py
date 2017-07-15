@@ -57,7 +57,7 @@ class Pause(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image, self.rect = load_image('pause.png')
         place_center(self.image, self.rect)
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.image, (self.rect))
 
 class Record(pygame.sprite.Sprite):
@@ -71,9 +71,9 @@ class Record(pygame.sprite.Sprite):
         self.username = username_highscore[0]
         self.score = username_highscore[1]
         self.font = pygame.font.Font(FONT, 20)
-        self.rank_render = self.font.render(str(self.rank), True, fontcolor)
-        self.username_render = self.font.render(self.username, True, fontcolor)
-        self.score_render = self.font.render(str(self.score), True, fontcolor)
+        self.rank_render = self.font.draw(str(self.rank), True, fontcolor)
+        self.username_render = self.font.draw(self.username, True, fontcolor)
+        self.score_render = self.font.draw(str(self.score), True, fontcolor)
         self.duration = 1.5 # Duration per frame
         self.frame_count = 0
 
@@ -81,7 +81,7 @@ class Record(pygame.sprite.Sprite):
         for image, rect in self.frames:
             position_mid(image, rect, x, y)
 
-    def render(self, screen):
+    def draw(self, screen):
         frame = self.frames[int(self.frame_count/self.duration)]
         screen.blit(frame[0], frame[1])
         if self.frame_count <= 4 * self.duration - 1:
@@ -122,12 +122,12 @@ class Highscore(pygame.sprite.Sprite):
             return 0
         return 1 if tuple_a[1] > tuple_b[1] else -1
 
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.image, self.rect)
         for i in self.records:
-            if not i.render(screen):
+            if not i.draw(screen):
                 return
-            i.render(screen)
+            i.draw(screen)
 
 
 class StartScreen(pygame.sprite.Sprite):
@@ -143,11 +143,11 @@ class StartScreen(pygame.sprite.Sprite):
         self.blinker_counter = 0
         self.blinker_duration = 35
 
-    def render(self, screen):
+    def draw(self, screen):
         # Render image
         screen.blit(self.image, (self.rect))
         # Render text
-        self.name_render = self.font.render(self.name, True, (21, 29, 40))
+        self.name_render = self.font.draw(self.name, True, (21, 29, 40))
         screen.blit(self.name_render, (SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2 + 35))
         if self.blinker_counter < self.blinker_duration/2:
             # Position blinker after text
@@ -170,7 +170,7 @@ class StartScreen(pygame.sprite.Sprite):
         return False
 
 
-class VolumnButton(pygame.sprite.Sprite):
+class VolumeButton(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.images = []
@@ -197,7 +197,7 @@ class VolumnButton(pygame.sprite.Sprite):
                 sounds[key].set_volume(1)
         self.sound_on = not self.sound_on
 
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.image, (self.rect))
 
 class DarkenScreen(pygame.sprite.Sprite):
@@ -206,7 +206,7 @@ class DarkenScreen(pygame.sprite.Sprite):
         self.background_darken = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.background_darken.set_alpha(200)
         self.background_darken.fill(color)
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.background_darken, (0,0))
 
 class LostScreen(pygame.sprite.Sprite):
@@ -217,9 +217,9 @@ class LostScreen(pygame.sprite.Sprite):
         # Move banner to center
         place_center(self.image, self.rect)
 
-    def render(self, screen):
+    def draw(self, screen):
         # Darken the background
-        self.darken.render(screen)
+        self.darken.draw(screen)
         screen.blit(self.image, (self.rect))
 
 
@@ -229,9 +229,9 @@ class HPBar(pygame.sprite.Sprite):
         self.hp = 10
         self.font = pygame.font.Font(FONT, 32)
         self.blood_color = (186,71,46)
-        self.hp_text = self.font.render("HP", True, self.blood_color)
+        self.hp_text = self.font.draw("HP", True, self.blood_color)
 
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.hp_text, (SCREEN_WIDTH - 250, 10))
         rect_space = (SCREEN_WIDTH - 200, 15, 150, 32)
         pygame.draw.rect(screen, (255,255,255), rect_space)
@@ -247,9 +247,9 @@ class Scorepad(pygame.sprite.Sprite):
         self.font = pygame.font.Font(FONT, 32)
         self.score = 0
 
-    def render(self, screen):
+    def draw(self, screen):
         string = "Score: " + str(self.score)
-        scorepad = self.font.render(string, True, (95,92,119))
+        scorepad = self.font.draw(string, True, (95,92,119))
         screen.blit(scorepad, (50, 10))
 
 class Egg(pygame.sprite.Sprite):
@@ -264,7 +264,7 @@ class Egg(pygame.sprite.Sprite):
         self.rect.move_ip(0, self.y_dist)
         self.y += self.y_dist
 
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.image, (self.rect))
 
 
@@ -284,7 +284,7 @@ class Backdrop(pygame.sprite.Sprite):
         self.vel_x = 0
         self.vel_y = 0
 
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.image, (self.rect))
 
 class Chicken(pygame.sprite.Sprite):
@@ -313,7 +313,7 @@ class Chicken(pygame.sprite.Sprite):
             self.x -= self.x_dist
         self.rect.move_ip(xMove, 0)
 
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.image, (self.rect))
 
 class ConnectionWaitScreen(pygame.sprite.Sprite):
@@ -322,10 +322,5 @@ class ConnectionWaitScreen(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.image.fill((0,0,0))
 
-    def render(self, screen):
+    def draw(self, screen):
         screen.blit(self.image, (self.rect))
-
-class SpriteLoader():
-    ''' Load the sprites necessary for start_screen '''
-    def load_start_screen():
-        return [Backdrop(), VolumnButton(), StartScreen()]
