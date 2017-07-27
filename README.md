@@ -1,14 +1,13 @@
 # EggDrop
 
-![](https://raw.githubusercontent.com/mokuki082/EggDrop/master/timeline/27-07-2017.gif)
-
-## About
-
 >IMPORTANT MENTION:
 >The art of this game "EggDrop" is originally intended to be made for TurtleBrains, a C++ Game Engine.
 [Check out TurtleBrains here](https://www.timbeaudet.com/). I met the developer of TurtleBrains: Tim Beaudet a little while ago at Ludum Dare, our styles matched so I agreed to make the assets for one of TurtleBrains tutorials (Egg Drop).
 It is still the most important use of this art. I made this game as a practice (still a game dev newbie :3). I used the art that I made for TurtleBrains back then as the base of the game, and added more as I went. I thought I'd put it up here because I quite like it :D. I give all the rights for TurtleBrains to use the some of the arts of this game.
 
+![](https://raw.githubusercontent.com/mokuki082/EggDrop/master/timeline/27-07-2017.gif)
+
+## About
 
 EggDrop is simple drop and catch game.
 
