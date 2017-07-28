@@ -17,7 +17,7 @@ You can also have a race with your friend and see whose chicken mum is capable o
 
 The game is currently supported on __MacOS__ only.
 
-Download or clone the directory and drag __EggDrop.app__ to your desired location on disk.
+[Download EggDrop v.1.0.0 for MacOS](https://github.com/mokuki082/EggDrop/raw/master/archive/EggDrop_v1.0.0.zip)
 
 Double click on the downloaded application to play.
 
