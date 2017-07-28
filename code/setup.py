@@ -19,7 +19,7 @@ OPTIONS = {
 
 setup(
     name='EggDrop',
-    version="0.1.0",
+    version="1.0.0",
     author="Moku",
     license="This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.",
     app=APP,
