@@ -17,7 +17,7 @@ You can also have a race with your friend and see whose chicken mum is capable o
 
 The game is currently supported on __MacOS__ only.
 
-Navigate to _code/dist/_ and download _EggDrop.app_ to your disk. 
+Download or clone the directory and drag __EggDrop.app__ to your desired location on disk.
 
 Double click on the downloaded application to play.
 
@@ -29,3 +29,6 @@ Double click on the downloaded application to play.
 * Use **LEFT/RIGHT** or **A/D** to move the main character (The Chicken).
 * Use 'M' or cursor to mute the music.
 * Use 'P' to pause the game (single player mode only).
+
+## Dependencies
+* SDL 1.2.0 and above
