@@ -25,7 +25,7 @@ CLIENT_TIMEOUT = False
 '''
     STOP_GAME
     For client: Used by the loop to tell the client to stop sending data
-    For server: Used by the server to tells the main loop to stop looping
+    For server: Used by the server to tell the main loop to stop looping
 '''
 STOP_GAME = False
 
